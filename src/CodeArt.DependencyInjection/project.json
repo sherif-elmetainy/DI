@@ -1,11 +1,20 @@
 ﻿{
   "version": "1.0.0-alpha1",
-  "description": "CodeArt.DependencyInjection Class Library",
-  "authors": [ "Sherif" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
-
+  "title": "CodeArt.DependencyInjection",
+  "description": "CodeArt.DependencyInjection is a .NET Library that adds extra functionality (such as decorator pattern) to the DI container used in ASP.NET 5 projects",
+  "summary": "CodeArt.DependencyInjection is a .NET Library that adds extra functionality (such as decorator pattern) to the DI container used in ASP.NET 5 projects",
+  "authors": [ "Sherif Elmetainy" ],
+  "owners": [ "Sherif Elmetainy (Code Art)" ],
+  "tags": [ "DI, Dependency Injection, Decorator Pattern, DNX, Code Art, ASP.NET 5" ],
+  "copyright": "Copyright (c) 2015 Sherif Elmetainy (Code Art)",
+  "licenseUrl": "https://github.com/sherif-elmetainy/DI/blob/master/LICENSE.txt",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sherif-elmetainy/DI"
+  },
+  "requireLicenseAcceptance": false,
+  "projectUrl": "https://github.com/sherif-elmetainy/DI",
+  "releaseNotes": "Initial version that currently have support for decorator pattern only.",
   "dependencies": {
     "Microsoft.Framework.DependencyInjection": "1.0.0-*",
     "Microsoft.Framework.NotNullAttribute.Sources": {
