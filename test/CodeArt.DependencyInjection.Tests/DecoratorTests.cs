@@ -1,16 +1,17 @@
-﻿// Copyright (c) Sherif Elmetainy (Code Art). All rights reserved.
+﻿// Copyright (c) Sherif Elmetainy (Code Art).
 // Licensed under the MIT License. See LICENSE.txt in the solution root for license information.
 
 using System.Linq;
 using Microsoft.Framework.DependencyInjection;
 using Xunit;
+// ReSharper disable UnusedMember.Global
 
 namespace CodeArt.DependencyInjection.Tests
 {
     /// <summary>
     ///     Test methods for AddDecorator functionality
     /// </summary>
-    public class GenericDecoratorTests
+    public class DecoratorTests
     {
         /// <summary>
         ///     Test that default hello service without any decorator works

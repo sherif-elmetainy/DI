@@ -1,11 +1,12 @@
-﻿// Copyright (c) Sherif Elmetainy (Code Art). All rights reserved.
+﻿// Copyright (c) Sherif Elmetainy (Code Art).
 // Licensed under the MIT License. See LICENSE.txt in the solution root for license information.
 
-using CodeArt.DependencyInjection;
 using System;
 using System.Linq;
-using Microsoft.Framework.Internal;
 using System.Reflection;
+using CodeArt.DependencyInjection;
+using Microsoft.Framework.Internal;
+// ReSharper disable UnusedMethodReturnValue.Global
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Framework.DependencyInjection
@@ -13,7 +14,7 @@ namespace Microsoft.Framework.DependencyInjection
     /// <summary>
     ///     Extension methods for setting adding support for Decorators
     /// </summary>
-    public static class DecoratorServiceCollectionExtensions
+    public static class CommonServiceCollectionExtensions
     {
         /// <summary>
         ///     Whether the decorator can be used to decorate the service specified by the service descriptor
@@ -40,11 +41,10 @@ namespace Microsoft.Framework.DependencyInjection
             if (decoratorServiceLifetime == ServiceLifetime.Transient)
                 return true;
             // A scoped decorator cannot hold a reference to a transient service
-            else if (decoratorServiceLifetime == ServiceLifetime.Scoped)
+            if (decoratorServiceLifetime == ServiceLifetime.Scoped)
                 return serviceDescriptor.Lifetime != ServiceLifetime.Transient;
             // A singleton decorator cannot hold a reference to a scoped or transient service
-            else
-                return serviceDescriptor.Lifetime == ServiceLifetime.Singleton;
+            return serviceDescriptor.Lifetime == ServiceLifetime.Singleton;
         }
 
         /// <summary>
@@ -253,6 +253,168 @@ namespace Microsoft.Framework.DependencyInjection
                 }
             }
 
+            return services;
+        }
+
+        /// <summary>
+        /// Validates that a type is not abstract and is class
+        /// </summary>
+        /// <param name="implementationType">Type to validated</param>
+        /// <exception cref="ArgumentException">Thrown if type specified by <paramref name="implementationType"/> is abstract or not a class.</exception>
+        private static void ValidateTypeIsClassAndNotAbstract([NotNull] Type implementationType)
+        {
+            if (!implementationType.GetTypeInfo().IsClass)
+                throw new ArgumentException($"Type '{implementationType.FullName}' is not a class.", nameof(implementationType));
+            if (implementationType.GetTypeInfo().IsAbstract)
+                throw new ArgumentException($"Type '{implementationType.FullName}' is Abstract.", nameof(implementationType));
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type as sevices to the service collection
+        /// </summary>
+        /// <typeparam name="TImpementationType">Implementation type of a service</typeparam>
+        /// <param name="services">services collection</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection AddImplementedInterfaces<TImpementationType>([NotNull] this IServiceCollection services, ServiceLifetime lifetime) where  TImpementationType: class 
+        {
+            return services.AddImplementedInterfaces(typeof (TImpementationType), lifetime);
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type as sevices to the service collection
+        /// </summary>
+        /// <param name="services">services collection</param>
+        /// <param name="implementationType">Implementatin type of the service</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection AddImplementedInterfaces([NotNull] this IServiceCollection services,
+            [NotNull] Type implementationType , ServiceLifetime lifetime)
+        {
+            ValidateTypeIsClassAndNotAbstract(implementationType);
+            foreach (var interfaceType in implementationType.GetInterfaces())
+            {
+                if (interfaceType == typeof(IDisposable))
+                    continue;
+                var descriptor = new ServiceDescriptor(interfaceType, implementationType, lifetime);
+                services.Add(descriptor);
+            }
+            return services;
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type as sevices to the service collection if they are not already added.
+        /// </summary>
+        /// <typeparam name="TImpementationType">Implementation type of a service</typeparam>
+        /// <param name="services">services collection</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection TryAddImplementedInterfaces<TImpementationType>([NotNull] this IServiceCollection services, ServiceLifetime lifetime) where TImpementationType : class
+        {
+            return services.TryAddImplementedInterfaces(typeof(TImpementationType), lifetime);
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type as sevices to the service collection if they are not already added
+        /// </summary>
+        /// <param name="services">services collection</param>
+        /// <param name="implementationType">Implementatin type of the service</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection TryAddImplementedInterfaces([NotNull] this IServiceCollection services,
+            [NotNull] Type implementationType, ServiceLifetime lifetime)
+        {
+            ValidateTypeIsClassAndNotAbstract(implementationType);
+            foreach (var interfaceType in implementationType.GetInterfaces())
+            {
+                if (interfaceType == typeof(IDisposable))
+                    continue;
+                var descriptor = new ServiceDescriptor(interfaceType, implementationType, lifetime);
+                services.TryAdd(descriptor);
+            }
+            return services;
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type and the type itself as sevices to the service collection
+        /// </summary>
+        /// <typeparam name="TImpementationType">Implementation type of a service</typeparam>
+        /// <param name="services">services collection</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection AddSelfAndImplementedInterfaces<TImpementationType>([NotNull] this IServiceCollection services, ServiceLifetime lifetime) where TImpementationType : class
+        {
+            return services.AddSelfAndImplementedInterfaces(typeof(TImpementationType), lifetime);
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type and the type itself as sevices to the service collection
+        /// </summary>
+        /// <param name="services">services collection</param>
+        /// <param name="implementationType">Implementatin type of the service</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection AddSelfAndImplementedInterfaces([NotNull] this IServiceCollection services,
+            [NotNull] Type implementationType, ServiceLifetime lifetime)
+        {
+            ValidateTypeIsClassAndNotAbstract(implementationType);
+            var descriptor = new ServiceDescriptor(implementationType, implementationType, lifetime);
+            services.Add(descriptor);
+            services.AddImplementedInterfaces(implementationType, lifetime);
+            return services;
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type and the type itself as sevices to the service collection if they are not already added.
+        /// </summary>
+        /// <typeparam name="TImpementationType">Implementation type of a service</typeparam>
+        /// <param name="services">services collection</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection TryAddSelfAndImplementedInterfaces<TImpementationType>([NotNull] this IServiceCollection services, ServiceLifetime lifetime) where TImpementationType : class
+        {
+            return services.TryAddSelfAndImplementedInterfaces(typeof(TImpementationType), lifetime);
+        }
+
+        /// <summary>
+        /// Add all the interfaces implemented by a type and the type itself as sevices to the service collection if they are not already added
+        /// </summary>
+        /// <param name="services">services collection</param>
+        /// <param name="implementationType">Implementatin type of the service</param>
+        /// <param name="lifetime">service lifetime</param>
+        /// <returns>reference to the services collection</returns>
+        public static IServiceCollection TryAddSelfAndImplementedInterfaces([NotNull] this IServiceCollection services,
+            [NotNull] Type implementationType, ServiceLifetime lifetime)
+        {
+            ValidateTypeIsClassAndNotAbstract(implementationType);
+            var descriptor = new ServiceDescriptor(implementationType, implementationType, lifetime);
+            services.TryAdd(descriptor);
+            services.TryAddImplementedInterfaces(implementationType, lifetime);
+            return services;
+        }
+
+        /// <summary>
+        /// Adds all non abstract class types that match a predicate in an assembly as services in the service collection
+        /// </summary>
+        /// <param name="services">service collection to add types to</param>
+        /// <param name="assembly">Assembly to looks for types for</param>
+        /// <param name="lifetime">life time of services</param>
+        /// <param name="predicate">predicate to use to match all interfaces. If null, all class types that are not abstract are matched.</param>
+        /// <returns>reference to the service collection</returns>
+        public static IServiceCollection AddAssembly([NotNull] this IServiceCollection services, Assembly assembly,
+            ServiceLifetime lifetime, Func<Type, bool> predicate = null)
+        {
+            if (predicate == null)
+            {
+                predicate = t => true;
+            }
+            foreach (var type in assembly.GetTypes())
+            {
+                if (!type.GetTypeInfo().IsAbstract && type.GetTypeInfo().IsClass && predicate(type))
+                {
+                    services.AddSelfAndImplementedInterfaces(type, lifetime);
+                }
+            }
             return services;
         }
     }

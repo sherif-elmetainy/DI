@@ -1,4 +1,4 @@
-﻿// Copyright (c) Sherif Elmetainy (Code Art). All rights reserved.
+﻿// Copyright (c) Sherif Elmetainy (Code Art).
 // Licensed under the MIT License. See LICENSE.txt in the solution root for license information.
 
 namespace CodeArt.DependencyInjection.Tests
